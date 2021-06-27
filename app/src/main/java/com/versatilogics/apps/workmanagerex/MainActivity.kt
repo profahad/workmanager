@@ -42,7 +42,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         button_upload.setOnClickListener {
-            uploaderTask()
+            if (workMangerThread.isChecked) {
+                uploaderTask()
+            } else {
+                simpleUploader()
+            }
         }
     }
 
@@ -98,11 +102,7 @@ class MainActivity : AppCompatActivity() {
             .observe(this, {
                 if (it.state.isFinished) {
                     Log.d("UploadRequest", "workManager: ${it.outputData.getString("output")}")
-                    Snackbar.make(
-                        layout_root,
-                        it.outputData.getString("output") ?: "N/A",
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    layout_root.snackbar(it.outputData.getString("output") ?: "N/A")
                 }
             })
     }
@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        File(selectedFile?.path!!).let {
+        selectedFile?.let {
             progress_bar.progress = 0
             val body = UploadRequestBody(it, "image", object : UploadRequestBody.UploadCallback {
                 override fun onProgressUpdate(percentage: Int) {

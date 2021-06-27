@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/layout_root"
+    android:padding="16dp"
     tools:context=".MainActivity">
 
 
@@ -14,7 +15,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="350dp"
             android:layout_margin="24dp"
-            app:srcCompat="@drawable/ic_picture" />
+            app:srcCompat="@drawable/ic_upload" />
 
         <TextView
             android:id="@+id/textView"
@@ -40,15 +40,45 @@
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:max="100"
             tools:progress="40" />
 
     </LinearLayout>
 
+    <RadioGroup
+        android:id="@+id/threadOptionGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:checkedButton="@id/workMangerThread"
+        android:gravity="start"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/button_upload"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <RadioButton
+            android:id="@+id/workMangerThread"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:text="WorkManager Thread" />
+
+        <RadioButton
+            android:id="@+id/simpleThread"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:text="Simple Thread" />
+
+    </RadioGroup>
+
     <Button
         android:id="@+id/button_upload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-black"
         android:text="Upload"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
