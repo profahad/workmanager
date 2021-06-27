@@ -12,7 +12,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.versatilogics.apps.workmanagerex.network.ApiService
 import com.versatilogics.apps.workmanagerex.network.ProgressRequestBody
-import com.versatilogics.apps.workmanagerex.network.UploadResponse
+import com.versatilogics.apps.workmanagerex.models.Response
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -31,7 +31,7 @@ class UploadRequest(appContext: Context, workerParams: WorkerParameters) :
         return Result.success(workDataOf("output" to "${response.data?.link}"))
     }
 
-    suspend fun uploadImage(file: File): UploadResponse {
+    suspend fun uploadImage(file: File): Response {
 
         createNotificationChannel()
 
@@ -41,7 +41,7 @@ class UploadRequest(appContext: Context, workerParams: WorkerParameters) :
                 createNotification(progressPercentage = percentage)
             }
         })
-        val response = ApiService().uploadImageThread(
+        val response = ApiService().coroutineUploadRequest(
             MultipartBody.Part.createFormData(
                 "image",
                 file.name,

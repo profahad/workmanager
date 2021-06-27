@@ -19,7 +19,6 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -124,22 +123,22 @@ class MainActivity : AppCompatActivity() {
                         progress_bar.progress = percentage
                     }
                 })
-            ApiService().uploadImage(
+            ApiService().simpleUploadRequest(
                 MultipartBody.Part.createFormData(
                     "image",
                     it.name,
                     body
                 ),
                 RequestBody.create(MediaType.parse("multipart/form-data"), "json")
-            ).enqueue(object : Callback<UploadResponse> {
-                override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
+            ).enqueue(object : Callback<com.versatilogics.apps.workmanagerex.models.Response> {
+                override fun onFailure(call: Call<com.versatilogics.apps.workmanagerex.models.Response>, t: Throwable) {
                     layout_root.snackbar(t.message!!)
                     progress_bar.progress = 0
                 }
 
                 override fun onResponse(
-                    call: Call<UploadResponse>,
-                    response: Response<UploadResponse>
+                    call: Call<com.versatilogics.apps.workmanagerex.models.Response>,
+                    response: Response<com.versatilogics.apps.workmanagerex.models.Response>
                 ) {
                     response.body()?.let {
                         layout_root.snackbar(it.data?.link ?: "N/A")
