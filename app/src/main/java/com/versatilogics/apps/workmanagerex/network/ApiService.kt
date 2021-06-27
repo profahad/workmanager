@@ -19,6 +19,17 @@ interface ApiService {
         @Part("title") title: RequestBody
     ): Call<UploadResponse>
 
+
+    @Multipart
+    @Headers(
+        "Authorization: Client-ID 546c25a59c58ad7"
+    )
+    @POST("image")
+    suspend fun uploadImageThread(
+        @Part image: MultipartBody.Part,
+        @Part("title") title: RequestBody
+    ): UploadResponse
+
     companion object {
         operator fun invoke(): ApiService {
             return Retrofit.Builder()

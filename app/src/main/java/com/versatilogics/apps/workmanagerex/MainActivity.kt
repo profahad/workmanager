@@ -9,7 +9,10 @@ import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.work.*
+import com.google.android.material.snackbar.Snackbar
 import com.versatilogics.apps.workmanagerex.network.*
+import com.versatilogics.apps.workmanagerex.workmanager.TrackRequest
+import com.versatilogics.apps.workmanagerex.workmanager.UploadRequest
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -25,6 +28,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
 
     private var selectedFile: File? = null
+    private var selectedFileUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         button_upload.setOnClickListener {
-            uploadImage()
+            uploaderTask()
         }
     }
 
@@ -56,26 +60,85 @@ class MainActivity : AppCompatActivity() {
         { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 //  you will get result here in result.data
-                val selectedImageUri = result.data?.data
-                image_view.setImageURI(selectedImageUri)
+                selectedFileUri = result.data?.data
+                image_view.setImageURI(selectedFileUri)
                 val parcelFileDescriptor =
-                    contentResolver.openFileDescriptor(selectedImageUri!!, "r", null)
+                    contentResolver.openFileDescriptor(selectedFileUri!!, "r", null)
 
                 val inputStream = FileInputStream(parcelFileDescriptor?.fileDescriptor)
-                selectedFile = File(cacheDir, contentResolver.getFileName(selectedImageUri))
+                selectedFile = File(cacheDir, contentResolver.getFileName(selectedFileUri!!))
                 val outputStream = FileOutputStream(selectedFile)
                 inputStream.copyTo(outputStream)
             }
 
         }
 
-    private fun uploadImage() {
+    private fun uploaderTask() {
+
         if (selectedFile == null) {
             layout_root.snackbar("Select an Image First")
             return
         }
 
-        selectedFile?.let {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val uploadRequest = OneTimeWorkRequestBuilder<UploadRequest>()
+            .setInputData(workDataOf("image" to selectedFile?.path))
+            .setConstraints(constraints)
+            .addTag("trackLog")
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueue(
+            uploadRequest
+        )
+
+        WorkManager.getInstance(applicationContext).getWorkInfoByIdLiveData(uploadRequest.id)
+            .observe(this, {
+                if (it.state.isFinished) {
+                    Log.d("UploadRequest", "workManager: ${it.outputData.getString("output")}")
+                    Snackbar.make(
+                        layout_root,
+                        it.outputData.getString("output") ?: "N/A",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            })
+    }
+
+    private fun repeatedTask() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val trackRequest = PeriodicWorkRequestBuilder<TrackRequest>(15, TimeUnit.MINUTES)
+            .setInputData(workDataOf("image" to selectedFileUri?.path))
+            .setConstraints(constraints)
+            .addTag("trackLog")
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "trackLogs",
+            ExistingPeriodicWorkPolicy.KEEP,
+            trackRequest
+        )
+
+        WorkManager.getInstance(applicationContext).getWorkInfoByIdLiveData(trackRequest.id)
+            .observe(this, {
+                if (it.state.isFinished) {
+                    Log.d("TrackRequest", "workManager: ${it.outputData.getString("output")}")
+                }
+            })
+    }
+
+    private fun simpleUploader() {
+        if (selectedFile == null) {
+            layout_root.snackbar("Select an Image First")
+            return
+        }
+
+        File(selectedFile?.path!!).let {
             progress_bar.progress = 0
             val body = UploadRequestBody(it, "image", object : UploadRequestBody.UploadCallback {
                 override fun onProgressUpdate(percentage: Int) {
@@ -107,31 +170,6 @@ class MainActivity : AppCompatActivity() {
             })
 
         }
-    }
-
-    private fun workManager() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val trackRequest = PeriodicWorkRequestBuilder<TrackRequest>(15, TimeUnit.MINUTES)
-            .setInputData(workDataOf("input" to "Fahad"))
-            .setConstraints(constraints)
-            .addTag("trackLog")
-            .build()
-
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-            "trackLogs",
-            ExistingPeriodicWorkPolicy.KEEP,
-            trackRequest
-        )
-
-        WorkManager.getInstance(applicationContext).getWorkInfoByIdLiveData(trackRequest.id)
-            .observe(this, {
-                if (it.state.isFinished) {
-                    Log.d("TrackRequest", "workManager: ${it.outputData.getString("output")}")
-                }
-            })
     }
 
 }
