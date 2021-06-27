@@ -2,8 +2,10 @@
 ## WorkManager
 WorkManager is an usefull job scheduler to integrate long running and repeated task without any hassle. WorkManager is introduced by Google in 2019. In this project we use workmanager to create image uploader request in background with the help of retrofit and trigger progress notification to manage request.
 
+![Using WorkManager](https://raw.githubusercontent.com/profahad/workmanager/master/screenplay/Screen%20Recording%202021-06-27%20at%203.40.46%20PM.gif)      ![Using Simple Retrofit](https://raw.githubusercontent.com/profahad/workmanager/master/screenplay/Screen%20Recording%202021-06-27%20at%203.46.29%20PM.gif)
+
 ## Features
 
 - WorkManager Flow
 - Retrofit multipart request with uploading progress
-- Forground service notification to present and manage progress
+- Ongoing Notification to show and manage progress
