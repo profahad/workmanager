@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.work.*
-import com.google.android.material.snackbar.Snackbar
+import com.bumptech.glide.Glide
 import com.versatilogics.apps.workmanagerex.network.*
 import com.versatilogics.apps.workmanagerex.workmanager.TrackRequest
 import com.versatilogics.apps.workmanagerex.workmanager.UploadRequest
@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         button_upload.setOnClickListener {
+            uploaded_view.setImageResource(R.drawable.ic_view)
             if (workMangerThread.isChecked) {
                 uploaderTask()
             } else {
@@ -103,8 +104,52 @@ class MainActivity : AppCompatActivity() {
                 if (it.state.isFinished) {
                     Log.d("UploadRequest", "workManager: ${it.outputData.getString("output")}")
                     layout_root.snackbar(it.outputData.getString("output") ?: "N/A")
+                    Glide.with(this@MainActivity).load(it.outputData.getString("output"))
+                        .into(uploaded_view)
                 }
             })
+    }
+
+    private fun simpleUploader() {
+        if (selectedFile == null) {
+            layout_root.snackbar("Select an Image First")
+            return
+        }
+
+        selectedFile?.let {
+            progress_bar.progress = 0
+            val body =
+                ProgressRequestBody(it, "image", object : ProgressRequestBody.UploadCallback {
+                    override fun onProgressUpdate(percentage: Int) {
+                        progress_bar.progress = percentage
+                    }
+                })
+            ApiService().uploadImage(
+                MultipartBody.Part.createFormData(
+                    "image",
+                    it.name,
+                    body
+                ),
+                RequestBody.create(MediaType.parse("multipart/form-data"), "json")
+            ).enqueue(object : Callback<UploadResponse> {
+                override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
+                    layout_root.snackbar(t.message!!)
+                    progress_bar.progress = 0
+                }
+
+                override fun onResponse(
+                    call: Call<UploadResponse>,
+                    response: Response<UploadResponse>
+                ) {
+                    response.body()?.let {
+                        layout_root.snackbar(it.data?.link ?: "N/A")
+                        Glide.with(this@MainActivity).load(it.data?.link).into(uploaded_view)
+                        progress_bar.progress = 100
+                    }
+                }
+            })
+
+        }
     }
 
     private fun repeatedTask() {
@@ -130,46 +175,6 @@ class MainActivity : AppCompatActivity() {
                     Log.d("TrackRequest", "workManager: ${it.outputData.getString("output")}")
                 }
             })
-    }
-
-    private fun simpleUploader() {
-        if (selectedFile == null) {
-            layout_root.snackbar("Select an Image First")
-            return
-        }
-
-        selectedFile?.let {
-            progress_bar.progress = 0
-            val body = UploadRequestBody(it, "image", object : UploadRequestBody.UploadCallback {
-                override fun onProgressUpdate(percentage: Int) {
-                    progress_bar.progress = percentage
-                }
-            })
-            ApiService().uploadImage(
-                MultipartBody.Part.createFormData(
-                    "image",
-                    it.name,
-                    body
-                ),
-                RequestBody.create(MediaType.parse("multipart/form-data"), "json")
-            ).enqueue(object : Callback<UploadResponse> {
-                override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
-                    layout_root.snackbar(t.message!!)
-                    progress_bar.progress = 0
-                }
-
-                override fun onResponse(
-                    call: Call<UploadResponse>,
-                    response: Response<UploadResponse>
-                ) {
-                    response.body()?.let {
-                        layout_root.snackbar(it.data?.link ?: "N/A")
-                        progress_bar.progress = 100
-                    }
-                }
-            })
-
-        }
     }
 
 }

@@ -8,7 +8,7 @@ import okio.BufferedSink
 import java.io.File
 import java.io.FileInputStream
 
-class UploadRequestBody(
+class ProgressRequestBody(
     private val file: File,
     private val contentType: String,
     private val callback: UploadCallback
