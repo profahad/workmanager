@@ -6,6 +6,7 @@ WorkManager is an usefull job scheduler to integrate long running and repeated t
 
 ## Features
 
-- WorkManager Flow
-- Retrofit multipart request with uploading progress
+- **WorkManager** **OneTimeWorkRequest** and **PeriodicWorkRequest** Requests
+- Each WorkManager request handle with **Coroutines**
+- **Retrofit Multipart** request with uploading progress
 - Ongoing Notification to show and manage progress
