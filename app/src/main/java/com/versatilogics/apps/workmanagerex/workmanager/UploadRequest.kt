@@ -14,9 +14,9 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.versatilogics.apps.workmanagerex.MainActivity
+import com.versatilogics.apps.workmanagerex.models.ApiResponse
 import com.versatilogics.apps.workmanagerex.network.ApiService
 import com.versatilogics.apps.workmanagerex.network.ProgressRequestBody
-import com.versatilogics.apps.workmanagerex.models.ApiResponse
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -70,7 +70,14 @@ class UploadRequest(appContext: Context, workerParams: WorkerParameters) :
 
         val pendingIntent: PendingIntent =
             Intent(applicationContext, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(applicationContext, 0, notificationIntent, 0)
+                notificationIntent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                PendingIntent.getActivity(
+                    applicationContext,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
             }
 
         val builder = NotificationCompat.Builder(applicationContext, channelId)
