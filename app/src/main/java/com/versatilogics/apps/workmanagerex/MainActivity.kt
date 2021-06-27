@@ -10,6 +10,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.work.*
 import com.bumptech.glide.Glide
+import com.versatilogics.apps.workmanagerex.models.ApiResponse
 import com.versatilogics.apps.workmanagerex.network.*
 import com.versatilogics.apps.workmanagerex.workmanager.TrackRequest
 import com.versatilogics.apps.workmanagerex.workmanager.UploadRequest
@@ -19,6 +20,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -130,15 +132,15 @@ class MainActivity : AppCompatActivity() {
                     body
                 ),
                 RequestBody.create(MediaType.parse("multipart/form-data"), "json")
-            ).enqueue(object : Callback<com.versatilogics.apps.workmanagerex.models.Response> {
-                override fun onFailure(call: Call<com.versatilogics.apps.workmanagerex.models.Response>, t: Throwable) {
+            ).enqueue(object : Callback<ApiResponse> {
+                override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
                     layout_root.snackbar(t.message!!)
                     progress_bar.progress = 0
                 }
 
                 override fun onResponse(
-                    call: Call<com.versatilogics.apps.workmanagerex.models.Response>,
-                    response: Response<com.versatilogics.apps.workmanagerex.models.Response>
+                    call: Call<ApiResponse>,
+                    response: Response<ApiResponse>
                 ) {
                     response.body()?.let {
                         layout_root.snackbar(it.data?.link ?: "N/A")

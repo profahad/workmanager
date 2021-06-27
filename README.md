@@ -9,4 +9,4 @@ WorkManager is an useful job scheduler to integrate long running and repeated ta
 - **WorkManager** **OneTimeWorkRequest** and **PeriodicWorkRequest** Requests
 - Each WorkManager request handle with **Coroutines**
 - **Retrofit Multipart** request with uploading progress
-- Ongoing Notification to show and manage progress
+- **Foreground Service** Notification to show and manage progress

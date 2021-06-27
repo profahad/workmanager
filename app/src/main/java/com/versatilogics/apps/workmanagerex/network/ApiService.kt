@@ -1,7 +1,7 @@
 package com.versatilogics.apps.workmanagerex.network
 
 import com.versatilogics.apps.workmanagerex.configs.CONSTANTS
-import com.versatilogics.apps.workmanagerex.models.Response
+import com.versatilogics.apps.workmanagerex.models.ApiResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
@@ -19,7 +19,7 @@ interface ApiService {
     fun simpleUploadRequest(
         @Part image: MultipartBody.Part,
         @Part(CONSTANTS.KEYS.TITLE) title: RequestBody
-    ): Call<Response>
+    ): Call<ApiResponse>
 
 
     @Multipart
@@ -30,7 +30,7 @@ interface ApiService {
     suspend fun coroutineUploadRequest(
         @Part image: MultipartBody.Part,
         @Part(CONSTANTS.KEYS.TITLE) title: RequestBody
-    ): Response
+    ): ApiResponse
 
     companion object {
         operator fun invoke(): ApiService {

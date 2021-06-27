@@ -2,17 +2,21 @@ package com.versatilogics.apps.workmanagerex.workmanager
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.versatilogics.apps.workmanagerex.MainActivity
 import com.versatilogics.apps.workmanagerex.network.ApiService
 import com.versatilogics.apps.workmanagerex.network.ProgressRequestBody
-import com.versatilogics.apps.workmanagerex.models.Response
+import com.versatilogics.apps.workmanagerex.models.ApiResponse
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -31,14 +35,16 @@ class UploadRequest(appContext: Context, workerParams: WorkerParameters) :
         return Result.success(workDataOf("output" to "${response.data?.link}"))
     }
 
-    suspend fun uploadImage(file: File): Response {
+    private suspend fun uploadImage(file: File): ApiResponse {
 
         createNotificationChannel()
+
+        launchForegroundNotification()
 
         val body = ProgressRequestBody(file, "image", object : ProgressRequestBody.UploadCallback {
             override fun onProgressUpdate(percentage: Int) {
                 Log.d("UploadRequest", "onProgressUpdate: $percentage")
-                createNotification(progressPercentage = percentage)
+                launchForegroundNotification(progressPercentage = percentage, isUpdating = true)
             }
         })
         val response = ApiService().coroutineUploadRequest(
@@ -49,42 +55,46 @@ class UploadRequest(appContext: Context, workerParams: WorkerParameters) :
             ),
             RequestBody.create(MediaType.parse("multipart/form-data"), "json")
         )
+
         if (response.success)
-            createNotification(isFinished = true)
+            stopForegroundNotification()
+
         return response
     }
 
-    private fun createNotification(
+    private fun launchForegroundNotification(
         maxPercentage: Int = 100,
         progressPercentage: Int = 0,
-        isFinished: Boolean = false
+        isUpdating: Boolean = false
     ) {
-        val builder = NotificationCompat.Builder(applicationContext, channelId)
-            .setContentTitle("Uploading")
-            .setContentText("Uploading file...")
-            .setSmallIcon(
-                if (!isFinished) {
-                    android.R.drawable.stat_sys_download
-                } else {
-                    android.R.drawable.stat_sys_download_done
-                }
-            )
-            .setSilent(true)
-            .setOngoing(
-                !isFinished
-            )
 
-        with(NotificationManagerCompat.from(applicationContext)) {
-
-            if (isFinished) {
-                builder.setContentText("Upload complete.")
-                builder.setProgress(0, 0, false)
-            } else {
-                builder.setContentText("$progressPercentage%")
-                builder.setProgress(maxPercentage, progressPercentage, false)
+        val pendingIntent: PendingIntent =
+            Intent(applicationContext, MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(applicationContext, 0, notificationIntent, 0)
             }
 
-            notify(notificationId, builder.build())
+        val builder = NotificationCompat.Builder(applicationContext, channelId)
+            .setContentTitle("Uploading")
+            .setContentText("0%")
+            .setContentIntent(pendingIntent)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSilent(true)
+            .setProgress(100, 0, false)
+
+        if (isUpdating) {
+            with(NotificationManagerCompat.from(applicationContext)) {
+                builder.setContentText("$progressPercentage%")
+                builder.setProgress(maxPercentage, progressPercentage, false)
+                notify(notificationId, builder.build())
+            }
+        } else {
+            setForegroundAsync(ForegroundInfo(notificationId, builder.build()))
+        }
+    }
+
+    private fun stopForegroundNotification() {
+        with(NotificationManagerCompat.from(applicationContext)) {
+            cancel(notificationId)
         }
     }
 
